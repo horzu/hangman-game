@@ -16,38 +16,110 @@ var dictionary = []string{
 	"elma",
 	"almanya",
 }
+var state int = 2
+
+var wrongGuesses []string
 func main(){
 	// oyun durumunu yazdır -> state0
-	state, err := os.ReadFile("./states/hangman0")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("Hangman durumu: ", string(state))
+	// fmt.Println(hangmanState(state))
 
 
 	// tahmin etmemiz gereken bir kelime türet (rand.Seed(time.Now().UnixNano()))
 	rand.Seed(time.Now().Unix())
 	selectedWord := fmt.Sprint(dictionary[rand.Intn(len(dictionary))])
+
+
+	// Tahmin edilmesi gereken kelimenin mevcut durumunu yazdır
 	selectedWorDashes := strings.Repeat("_ ", utf8.RuneCountInString(selectedWord))
 	fmt.Println("Tahmin etmeniz gereken kelime: ", selectedWorDashes, "( kelime uzunluğu:", len(selectedWord),")")
 
+	game(selectedWord)
+	// // kullanıcı girdisini oku
+	// letter := getUserInput()
+	// // * validate (sadece harf olarak validate edilmeli)
+	// isLetter := validateInput(letter)
+	// for !isLetter {
+	// 	letter = getUserInput()
+	// 	isLetter = validateInput(letter)
 
-	// kullanıcı girdisini oku
-	var inputReader = bufio.NewReader(os.Stdin)
-	fmt.Print("Tahmin ettiğiniz harfi girip Enter'a basınız: ")
-	letter, _ := inputReader.ReadString('\n')
-	fmt.Printf("Tahmin edilen harf: %s\n", letter)
+	// }
+	// fmt.Printf("Tahmin edilen harf: %s\n", string(letter))
+	
+	// if strings.Contains(selectedWord, string(letter)) {
+	// 	fmt.Println("İçinde var!")
+	// } else {
+	// 	state++
+	// }
+	for state < 10 {
+		fmt.Println("state: ", state)
+		game(selectedWord)
+		fmt.Println(strings.Repeat("*",100))
+	}
+
+	if state == 10 {
+		fmt.Println("Kaybettin! İstenen kelime: ", selectedWord)
+	}
 
 
-	// * tahmin ettiğiniz kelimeyi yazdırın
+// harf doğrusa tahmin olarak yerine yazacaksın ( m a _ a) // birden fazla harf varsa tamamlayacak.
+// * doğruysa, tahmin edilen harfleri güncelleyin
+// * yanlışsa, adam asmaca durumunu güncelleyin
 
 
 // * adam asmaca durumunu yazdır
 
-// * validate (sadece harf olarak validate edilmeli)
-// harf doğrusa tahmin olarak yerine yazacaksın ( m a _ a) // birden fazla harf varsa tamamlayacak.
-// * doğruysa, tahmin edilen harfleri güncelleyin
-// * yanlışsa, adam asmaca durumunu güncelleyin
+
 // kelime tahmin edilirse -> kazanırsın
 // adam asmaca tamamlandıysa -> kaybedersiniz
+}
+
+func hangmanState(strings int) string{
+	stringState := fmt.Sprintf("./states/hangman%d", strings)
+	state, err := os.ReadFile(stringState)
+	if err != nil {
+		panic(err)
+	}
+	return fmt.Sprintf("Hangman durumu: \n%s", string(state))
+}
+
+func getUserInput() rune {
+	var inputReader = bufio.NewReader(os.Stdin)
+	fmt.Print("Tahmin ettiğiniz harfi giriniz: ")
+	letter, _ , err:= inputReader.ReadRune()
+	if err != nil {
+		fmt.Println(err)
+	}
+	return letter
+}
+
+func validateInput(letter rune) bool {
+	if (letter > 64 && letter < 91) || (letter > 96 && letter < 123) {
+		// * tahmin ettiğiniz harfi yazdırın
+		return true
+	} else {
+		fmt.Printf("Lütfen geçerli bir harf giriniz! \n")
+		return false
+	}
+}
+
+func game(selectedWord string) {
+	fmt.Println(hangmanState(state))
+	fmt.Println("Yanlış tahminler: ", strings.Join(wrongGuesses, ","))
+	// kullanıcı girdisini oku
+	letter := getUserInput()
+	// * validate (sadece harf olarak validate edilmeli)
+	isLetter := validateInput(letter)
+	for !isLetter {
+		letter = getUserInput()
+		isLetter = validateInput(letter)
+
+	}
+	fmt.Printf("Tahmin edilen harf: %s\n", string(letter))
+	
+	if strings.Contains(selectedWord, string(letter)) {
+		fmt.Println("İçinde var!")
+	} else {
+		state++
+		wrongGuesses = append(wrongGuesses, string(letter))
+	}
 }
